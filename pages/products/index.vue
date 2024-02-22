@@ -6,25 +6,7 @@ useSeoMeta({
 });
 
 const route = useRoute();
-const router = useRouter();
 const product = useProductsStore();
-
-function filterProducts(val: any) {
-  const categories = val?.map((category: any) => category.value);
-  router.push({
-    path: "/products",
-    query: { category: categories },
-  });
-}
-
-const getProducts = computed(() => {
-  if (route.query.category) {
-    return product.products.filter((p) =>
-      route.query.category?.includes(p.category.value),
-    );
-  }
-  return product.products;
-});
 
 const columns: QTableColumn[] = [
   {
@@ -45,6 +27,7 @@ const columns: QTableColumn[] = [
   { name: "images", label: "Slika", field: "images" },
   { name: "price", label: "Cijena", field: "price" },
   { name: "discount", label: "Popust", field: "discount" },
+  { name: "finalPrice", label: "Konačna cijena", field: "finalPrice" },
 ];
 
 const pagination = ref({
@@ -112,6 +95,14 @@ const filteredBrandOptions = ref([
     value: "guess",
   },
   {
+    label: "Emporio Armani",
+    value: "emporio armani",
+  },
+  {
+    label: "Hugo",
+    value: "hugo",
+  },
+  {
     label: "Polaroid",
     value: "polaroid",
   },
@@ -128,36 +119,6 @@ const filteredBrandOptions = ref([
     value: "versace",
   },
 ]);
-const brandOptions = [
-  {
-    label: "Crullé",
-    value: "crulle",
-  },
-  {
-    label: "Guess",
-    value: "guess",
-  },
-  {
-    label: "Polaroid",
-    value: "polaroid",
-  },
-  {
-    label: "Police",
-    value: "police",
-  },
-  {
-    label: "Ray-Ban",
-    value: "ray-ban",
-  },
-  {
-    label: "Versace",
-    value: "versace",
-  },
-  {
-    label: "Emporio Armani",
-    value: "emporio-armani",
-  },
-];
 
 const size = ref([]);
 const sizeOptions = [
@@ -183,22 +144,57 @@ const sortOptions = [
   "Skuplje prvo",
 ];
 
-const filterFn = (val: string, update: any) => {
-  update(
-    () => {
-      const needle = val.toLowerCase();
-      filteredBrandOptions.value = brandOptions.filter((v) =>
-        v.label.toLowerCase().includes(needle),
-      );
-    },
-    (ref: any) => {
-      if (val !== "" && ref.options.length > 0) {
-        ref.setOptionIndex(-1);
-        ref.moveOptionSelection(1, true);
-      }
-    },
+const test = computed(() => {
+  return String(route.query.category);
+});
+
+watch(
+  test,
+  () => {
+    const filter = categoryOptions.find((c) => c.value === test.value);
+    if (filter) category.value = [filter] as any;
+  },
+  { immediate: true },
+);
+
+const filteredProducts = computed(() => {
+  let result = product.products;
+
+  if (category.value?.length) {
+    const filter = category.value.map((c: any) => c.value);
+    result = result.filter((product) =>
+      filter.includes(product.category.value),
+    );
+  }
+
+  if (sex.value?.length) {
+    const filter = sex.value.map((c: any) => c.value);
+    result = result.filter((product) => filter.includes(product.sex.value));
+  }
+
+  if (brand.value?.length) {
+    const filter = brand.value.map((c: any) => c.value);
+    result = result.filter((product) =>
+      filter.includes(product.brand.toLowerCase()),
+    );
+  }
+
+  if (sort.value === "Jeftinije prvo") {
+    result.sort((a, b) => Number(a.finalPrice) - Number(b.finalPrice));
+  } else if (sort.value === "Skuplje prvo") {
+    result.sort((a, b) => Number(b.finalPrice) - Number(a.finalPrice));
+  } else if (sort.value === "Abecedno") {
+    result.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  result = result.filter(
+    (product) =>
+      Number(product.finalPrice) >= priceRange.value.min &&
+      Number(product.finalPrice) <= priceRange.value.max,
   );
-};
+
+  return result;
+});
 </script>
 
 <template>
@@ -218,7 +214,6 @@ const filterFn = (val: string, update: any) => {
             options-dense
             :options="categoryOptions"
             label="Kategorija"
-            @update:model-value="filterProducts"
           >
             <template #option="{ itemProps, opt, selected, toggleOption }">
               <q-item v-bind="itemProps">
@@ -271,7 +266,6 @@ const filterFn = (val: string, update: any) => {
             use-input
             options-dense
             label="Marka"
-            @filter="filterFn"
           >
             <template #option="{ itemProps, opt, selected, toggleOption }">
               <q-item v-bind="itemProps">
@@ -358,9 +352,10 @@ const filterFn = (val: string, update: any) => {
 
     <q-table
       grid
-      :rows="getProducts"
+      :rows="filteredProducts"
       :columns="columns"
       :rows-per-page-options="[8]"
+      :filter="filter"
       row-key="model"
       title="Proizvodi"
       title-class="!tw-text-4xl !tw-font-medium"
