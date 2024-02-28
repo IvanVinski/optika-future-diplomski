@@ -69,4 +69,15 @@ declare global {
     featured: boolean;
     published: boolean;
   };
+
+  type Order = {
+    address: Address;
+    date: Timestamp;
+    id: string;
+    items: ProductCart[];
+    quantity: number;
+    status: string;
+    total: number;
+    user: any;
+  };
 }

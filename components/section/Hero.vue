@@ -30,7 +30,7 @@
             color="white"
             text-color="primary"
             size="lg"
-            label="Zakažite svoj pregled sada"
+            label="Rezervirajte sada"
             to="/book-eye-test"
           />
         </div>

@@ -42,5 +42,11 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
 
-  return { items, itemsInCart, totalPrice, add, remove, deleteItem };
+  function empty() {
+    items.value = [];
+    itemsInCart.value = 0;
+    totalPrice.value = 0;
+  }
+
+  return { items, itemsInCart, totalPrice, add, remove, deleteItem, empty };
 });

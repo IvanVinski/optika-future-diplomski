@@ -37,3 +37,8 @@ h6,
   background-color: #224b8d;
   opacity: 0.8;
 }
+
+.q-table th {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}

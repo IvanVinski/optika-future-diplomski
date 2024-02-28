@@ -107,7 +107,7 @@ const selected = ref([]);
 function getSelectedString() {
   return selected.value.length === 0
     ? ""
-    : `${selected.value.length} record${selected.value.length > 1 ? "s" : ""} selected of ${product.products.length}`;
+    : `Odabrano proizvoda: ${selected.value.length} od ${product.products.length}`;
 }
 
 function getEmptyProduct() {
@@ -121,10 +121,10 @@ function getEmptyProduct() {
     discount: 0,
     finalPrice: "0.00",
     itemsInStock: 0,
-    images: [""],
-    tags: [{ value: "", label: "" }],
-    category: { value: "", label: "" },
-    sex: { value: "", label: "" },
+    images: [],
+    tags: [],
+    category: null,
+    sex: null,
     featured: false,
   };
 }
@@ -536,8 +536,6 @@ function removeImage(index: number) {
               class="tw-col-span-2"
             />
 
-            {{ editingProduct.description }}
-
             <q-file
               ref="filePicker"
               v-model="productImages"
@@ -702,25 +700,3 @@ function removeImage(index: number) {
     </q-dialog>
   </div>
 </template>
-
-<style>
-.q-table th {
-  font-size: 16px;
-}
-
-.list-move,
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.5s ease;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-.list-leave-active {
-  position: absolute;
-}
-</style>

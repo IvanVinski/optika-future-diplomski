@@ -4,7 +4,8 @@ definePageMeta({
 });
 
 const user = useUserStore();
-await user.fetch();
+
+if (!user.data) await user.fetch();
 </script>
 
 <template>

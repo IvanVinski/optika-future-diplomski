@@ -1,11 +1,40 @@
 <script lang="ts" setup>
+import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
+
 const step = ref(1);
 const pickedAddress = ref();
+const isLoading = ref(false);
 
 const title = ["Košarica", "Odabir adrese"];
 
 const user = useUserStore();
 const cart = useCartStore();
+const db = useFirestore();
+
+const handlePayment = async () => {
+  if (user.data && pickedAddress.value) {
+    isLoading.value = true;
+    const newOrderRef = doc(collection(db, "orders"));
+    const userRef = doc(db, "users", user.data.uid);
+
+    const order = {
+      id: newOrderRef.id,
+      items: cart.items,
+      total: cart.totalPrice,
+      quantity: cart.itemsInCart,
+      address: pickedAddress.value,
+      user: userRef,
+      date: Timestamp.now(),
+      status: "U obradi",
+    };
+    await setDoc(newOrderRef, order);
+    user.fetchOrders();
+    cart.empty();
+    await navigateTo("/account/orders");
+
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
@@ -107,7 +136,7 @@ const cart = useCartStore();
         <template v-for="(address, index) in user.data?.addresses" :key="index">
           <q-item v-ripple tag="label">
             <q-item-section avatar>
-              <q-radio v-model="pickedAddress" val="address1" />
+              <q-radio v-model="pickedAddress" :val="address" />
             </q-item-section>
             <q-item-section class="tw-font-medium md:tw-text-xl">
               <q-item-label>Ime i prezime: {{ user.data.name }}</q-item-label>
@@ -132,8 +161,20 @@ const cart = useCartStore();
       </q-list>
 
       <div class="tw-mt-12 tw-space-x-6">
-        <q-btn no-caps flat label="Nazad" @click="step--" />
-        <q-btn color="primary" label="Plati" />
+        <q-btn
+          no-caps
+          flat
+          label="Nazad"
+          :disable="isLoading"
+          @click="step--"
+        />
+        <q-btn
+          color="primary"
+          label="Plati"
+          :loading="isLoading"
+          :disable="!pickedAddress"
+          @click="handlePayment"
+        />
       </div>
     </div>
   </div>
